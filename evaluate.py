@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-import psutil as ps, sys, logging, pdb
+import psutil as ps, sys, logging, pdb, time, base64
+from subprocess import Popen, PIPE
+from pexpect import spawn
+from threading import Thread
 
 def byName(names):
 	logging.debug(names)
@@ -23,6 +26,15 @@ def listByPsProcs(ps_procs):
 def dictOfConnectionsByPid(ps_procs):
 	return dict((p.pid, [p.name(), p.connections()]) for p in ps_procs if p.connections()[0:])
 
+def testDef():
+	child = spawn('bash')
+	child.sendline('nethogs -t | grep '+sys.argv[1] +' --colour=never')
+	for line in child:
+		print(line.decode('utf-8').splitlines()[-1])
+		#print([l for l in line.decode('UTF-8').splitlines()])
+		#print([l for l in base64.b32decode(line).splitlines() if sys.argv[1] in l])
+		#base64.b64decode
+		time.sleep(1)
 
 
 if __name__ == '__main__':
@@ -35,5 +47,7 @@ if __name__ == '__main__':
 			logging.debug("%r" %(dict((k,len(v)) for k,v in dictByName(sys.argv[2:]).items() ) ) )
 		elif sys.argv[1]=='-connections':
 			logging.info(dictOfConnectionsByPid(byName(sys.argv[2:])))
+		else:
+			Thread(target=testDef).start()
 	else:
 		print("Please provide process name/ID to evaluate. Usage:\n./evaluate.py -id <pid> or ./evaluate.py -name <name>")
