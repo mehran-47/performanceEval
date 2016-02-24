@@ -6,8 +6,8 @@ from threading import Thread, Event
 
 '''
 Dependency installation:
-sudo apt-get install libpcap-dev & \
-git clone https://github.com/raboof/nethogs.git & \
+sudo apt-get install libpcap-dev && \
+git clone https://github.com/raboof/nethogs.git && \
 cd nethogs && make && sudo install
 '''
 
@@ -32,8 +32,13 @@ class evaluate():
 
 	def byName(self):
 		logging.debug(self.names)
-		allProcsOfName = [p for p in map(lambda n: ps.Process(n), ps.pids()) if p.name() in self.names]
-		return self.listByPsProcs(allProcsOfName)
+		toRet = []
+		try:
+			allProcsOfName = [p for p in map(lambda n: ps.Process(n), ps.pids()) if p.name() in self.names]
+			toRet = self.listByPsProcs(allProcsOfName)
+		except ps.NoSuchProcess:
+			logging.warning('A process died during construction of ps-processes-by-name (byName), skipping this dictionary')
+		return toRet
 
 	def dictByNames(self):
 		listByNames = self.byName()
