@@ -19,6 +19,7 @@ class evaluate():
 		self.netUpdaterThreads =  [ThreadInterruptable(target=self.updateWithNetworkUsage, args=(interfaceName, n), name='netUpdaterThread-'+n) for n in names]
 		self.allThreads = [ThreadInterruptable(target=self.mergeAndDisplayFinalDict, name='mergeAndDisplayFinalDict')] + self.netUpdaterThreads
 		self.inventory = {}
+		self.centralClock = 0
 
 
 	def start(self):
@@ -95,6 +96,7 @@ class evaluate():
 
 	def mergeAndDisplayFinalDict(self):
 		while threadsRunning.is_set():
+			self.centralClock += 1
 			procsDictByName = self.dictByNames()
 			memoryInfoByName = dict( (k, sum([p.memory_info().rss/10**6 for p in l]) ) for k,l in procsDictByName.items())
 			logging.debug("memoryInfoByName %r" %(memoryInfoByName))
@@ -111,12 +113,12 @@ class evaluate():
 					self.inventory[k]['net_load']['up'] = []
 					self.inventory[k]['net_load']['down'] = []
 				if self.finalDict[k].get('memory_info')!=None:
-					self.inventory[k]['memory_info'] += [self.finalDict[k].get('memory_info')]
+					self.inventory[k]['memory_info'] += [[self.centralClock, self.finalDict[k].get('memory_info')]]
 				if self.finalDict[k].get('net_load')!=None:
 					logging.debug("%r" %(self.finalDict[k].get('net_load')))
 					if 'up' in self.finalDict[k].get('net_load'):
-						self.inventory[k]['net_load']['up'] += [self.finalDict[k]['net_load']['up']]
-						self.inventory[k]['net_load']['down'] += [self.finalDict[k]['net_load']['down']]
+						self.inventory[k]['net_load']['up'] += [[self.centralClock ,self.finalDict[k]['net_load']['up']]]
+						self.inventory[k]['net_load']['down'] += [[self.centralClock, self.finalDict[k]['net_load']['down']]]
 			logging.info("inventory : %r" %(self.inventory))
 			time.sleep(self.interval)			
 
