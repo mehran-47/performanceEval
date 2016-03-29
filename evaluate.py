@@ -99,21 +99,26 @@ class evaluate():
 			self.centralClock += 1
 			procsDictByName = self.dictByNames()
 			memoryInfoByName = dict( (k, sum([p.memory_info().rss/10**6 for p in l]) ) for k,l in procsDictByName.items())
-			logging.debug("memoryInfoByName %r" %(memoryInfoByName))
+			cpuInfoByName = dict( (k, sum([p.cpu_percent(interval=None) for p in l]) ) for k,l in procsDictByName.items())
+			#logging.debug("memoryInfoByName %r" %(memoryInfoByName))
 			for k in memoryInfoByName:
 				if k not in self.finalDict:			
 					self.finalDict[k] = {}
 				self.finalDict[k]['memory_info'] = memoryInfoByName[k]
+				self.finalDict[k]['cpu_info'] = cpuInfoByName[k]
 			logging.debug("from mergeAndDisplayFinalDict:  %r", self.finalDict)
 			for k in self.finalDict:
 				if k not in self.inventory:
 					self.inventory[k] = {}
 					self.inventory[k]['memory_info'] = []
+					self.inventory[k]['cpu_info'] = []
 					self.inventory[k]['net_load'] = {}
 					self.inventory[k]['net_load']['up'] = []
 					self.inventory[k]['net_load']['down'] = []
 				if self.finalDict[k].get('memory_info')!=None:
 					self.inventory[k]['memory_info'] += [[self.centralClock, self.finalDict[k].get('memory_info')]]
+				if self.finalDict[k].get('cpu_info')!=None:
+					self.inventory[k]['cpu_info'] += [[self.centralClock, self.finalDict[k].get('cpu_info')]]
 				if self.finalDict[k].get('net_load')!=None:
 					logging.debug("%r" %(self.finalDict[k].get('net_load')))
 					if 'up' in self.finalDict[k].get('net_load'):
